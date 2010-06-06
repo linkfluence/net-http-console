@@ -1,0 +1,12 @@
+use strict;
+use warnings;
+
+use Term::ReadLine;
+use Net::HTTP::Console;
+
+my $console = Net::HTTP::Console->new_with_options();
+
+my $term = Term::ReadLine->new("http::net::console");
+while (defined(my $in = $term->readline($console->prompt))) {
+    $console->dispatch($in);
+}
