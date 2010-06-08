@@ -4,6 +4,8 @@ use MooseX::Declare;
 
 role Net::HTTP::Console::Role::Plugins {
 
+    use Try::Tiny;
+    
     has dispatchers => (
         is         => 'rw',
         isa        => 'ArrayRef[Str]',
@@ -33,6 +35,17 @@ role Net::HTTP::Console::Role::Plugins {
             \@p;
         },
     );
+
+    method dispatch ($input)  {
+        my $result;
+        try {
+            foreach ($self->all_plugins) {
+                last if ($result = $_->dispatch($input));
+            }
+        }catch{
+            print "[ERROR]: ".$_;
+        };
+    }
 }
 
 1;

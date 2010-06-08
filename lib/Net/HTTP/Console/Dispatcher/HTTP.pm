@@ -30,7 +30,6 @@ class Net::HTTP::Console::Dispatcher::HTTP with Net::HTTP::Console::Dispatcher {
         return 1;
     }
 
-
     method _do_request($http_method, $path) {
         $self->application->new_anonymous_method($http_method, $path);
         try {

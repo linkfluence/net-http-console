@@ -30,6 +30,13 @@ role Net::HTTP::Console::Role::API {
         $o;
     }
 
+    method new_anonymous_method ($http_method, $path) {
+        $self->api_object->meta->add_net_api_method(
+            'anonymous',
+            method => $http_method,
+            path   => $path,
+        );
+    }
 }
 
 1;
