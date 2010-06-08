@@ -5,30 +5,24 @@ use Try::Tiny;
 use Method::Signatures::Simple;
 use namespace::autoclean;
 
-with qw/MooseX::Getopt/;
+with qw/
+  MooseX::Getopt
+  Net::HTTP::Console::Role::APILib
+  Net::HTTP::Console::Role::HTTP
+  Net::HTTP::Console::Role::Headers
+  /;
 
-has url         => (isa => 'Str', is => 'rw');
-has format      => (isa => 'Str', is => 'rw', default => 'json');
-has format_mode => (isa => 'Str', is => 'rw', default => 'content-type');
-has lib => (
-    isa     => 'Str',
-    is      => 'rw',
-    default => sub {
-        Class::MOP::load_class('Net::HTTP::Console::Dummy');
-        'Net::HTTP::Console::Dummy';
-    },
-    handles => qr/.*/,
-);
+has url         => (isa => 'Str', is => 'rw', predicate => 'has_url');
+has format      => (isa => 'Str', is => 'rw', predicate => 'has_format');
+has format_mode => (isa => 'Str', is => 'rw', predicate => 'has_format_mode');
 has prompt => (
     isa     => 'Str',
     is      => 'rw',
     lazy    => 1,
     default => sub {
         my $self = shift;
-        # FIXME
-#        my $url = $self->lib->api_base_url ? $self->lib->api_base_url : $self->url;
-#        my $url= "http";
-        return $self->url . '> ';
+        my $url = $self->api_object->api_base_url;
+        return ($url || '[no url defined!]') . '> ';
     }
 );
 has plugins => (
@@ -40,7 +34,7 @@ has plugins => (
     default => sub {
         my $self = shift;
         my @p;
-        for (qw/LoadLib HTTPRequest Help ExecuteMethod/) {
+        for (qw/LoadLib HTTPRequest Help ExecuteMethod Headers/) {
             my $p = "Net::HTTP::Console::Dispatcher::" . $_;
             Class::MOP::load_class($p);
             my $o = $p->new(application => $self);
@@ -50,44 +44,25 @@ has plugins => (
     },
 );
 
-sub BUILDARGS {
-    my ($class, %args) = @_;
-    if ($args{lib}) {
-        Class::MOP::load_class($args{lib});
-    }
-    return {%args};
-}
-
 method dispatch($input) {
-    my @plugins = $self->all_plugins();
-      my $result;
-      foreach (@plugins) {
-        $result = $_->dispatch($input);
-        last if $result;
+    my $result;
+    try {
+        foreach ($self->all_plugins) {
+            $result = $_->dispatch($input);
+            last if $result;
+        }
     }
-    # if (!$result) {
-    # try {
-
-    # }
-    # catch {
-    #     warn $_;
-    #     print "no command found!\n" unless $result;
-    # };
-#}
+    catch {
+        print "[ERROR] : " . $_;
+    };
 }
 
-method new_lib($http_method, $path) {
-    my $lib = $self->lib->new(
-        api_base_url    => $self->url,
-        api_format      => $self->format,
-        api_format_mode => $self->format_mode,
-    );
-    $lib->meta->add_net_api_method(
+method new_anonymous_method($http_method, $path) {
+    $self->api_object->meta->add_net_api_method(
         'anonymous',
         method => $http_method,
         path   => $path,
     );
-    return $lib;
 }
 
 no Moose;
