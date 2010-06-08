@@ -7,12 +7,7 @@ with qw/Net::HTTP::Console::Dispatcher/;
 
 sub dispatch {
     my ($self, $input) = @_;
-    if (Class::MOP::load_class($input)) {
-        print "loaded ".$input."\n";
-        $self->application->lib($input);
-        return 1;
-    }
-    # XXX error confess & co
+    $self->application->load_api_lib($input);
 }
 
 sub pattern {

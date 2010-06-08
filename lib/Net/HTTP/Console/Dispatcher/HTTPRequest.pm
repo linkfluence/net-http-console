@@ -3,10 +3,7 @@ package Net::HTTP::Console::Dispatcher::HTTPRequest;
 use Moose;
 use Try::Tiny;
 
-with qw/
-  Net::HTTP::Console::Dispatcher
-  Net::HTTP::Console::Role::HTTP
-  /;
+with qw/ Net::HTTP::Console::Dispatcher /;
 
 sub _clean_http_lib {
     my $self = shift;
@@ -27,11 +24,12 @@ sub dispatch {
     elsif ($input =~ /^(POST|PUT)\s(.*)(?:\s(.*))$/) {
         $self->_do_request_with_body($1, $2, $3);
     }
-    elsif($input =~ /^show\s(headers|content)$/) {
+    elsif ($input =~ /^show\s(headers|content)$/) {
         my $method = "_show_last_$1";
-        $self->$method;
+        $self->application->$method;
     }
     else {
+
         # XXX unsupporter method
     }
     return 1;
@@ -39,30 +37,39 @@ sub dispatch {
 
 sub pattern {
     my ($self, $input) = @_;
-    $input =~ /^(?:GET|POST|PUT|DELETE|HEAD|show)/ ? return $input : return 0;
+    $input =~ /^(?:GET|POST|PUT|DELETE|HEAD|show)\s/ ? return $input : return 0;
 }
 
 sub _do_request {
     my ($self, $http_method, $path) = @_;
-    my $http_console = $self->application->new_lib($http_method, $path);
+    $self->application->new_anonymous_method($http_method, $path);
     try {
-        my ($content, $result) = $http_console->anonymous;
-        $self->_set_and_show($content, $result);
+        my ($content, $result) = $self->application->api_object->anonymous;
+        $self->application->_set_and_show($content, $result);
+    }catch{
+        warn $_;
     };
 }
 
 sub _do_request_with_body {
     my ($self, $http_method, $path, $body) = @_;
-    my $http_console = $self->application->new_lib($http_method, $path);
-    $http_console->api_useragent->add_handler(
+    $self->application->new_anonymous_method($http_method, $path);
+
+    # XXX clean handlers
+    $self->application->api_object->api_useragent->add_handler(
         request_prepare => sub {
             my $request = shift;
-            $request->content($body);
+            $request->header('Content-Type' => 'application/json');
+            $request->content('{"foof":"bar"}');
         }
     );
     try {
-        my ($content, $result) = $http_console->anonymous;
-        $self->_set_and_show($content, $result);
+        my ($content, $result) = $self->application->api_object->anonymous;
+        $self->application->_set_and_show($content, $result);
+    }catch{
+        warn $_;
+        use YAML::Syck;
+        warn Dump $_->http_error;
     };
 }
 

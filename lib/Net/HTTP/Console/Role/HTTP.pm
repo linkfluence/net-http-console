@@ -33,8 +33,7 @@ sub _show_last_headers {
 
 sub _set_and_show {
     my ($self, $content, $response) = @_;
-    my $json = $self->_json->pretty->encode($content);
-    $self->_last_http_content($json);
+    $self->_last_http_content($self->_json->pretty->encode($content));
     $self->_last_http_response($response);
     $self->_show_last_content;
 }
