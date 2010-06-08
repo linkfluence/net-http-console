@@ -66,17 +66,6 @@ EOF
     method _help_about_load {
         print <<EOF
 load libname    -  load a MooseX::Net::API library
-EOF
-    }
-
-    method _list_commands {
-        my @methods =
-          $self->application->api_object->meta->get_all_net_api_methods();
-
-        if (!@methods) {
-            print "no method available\n";
-            return;
-        }
 
         print "available commands:\n";
         map { print "- " . $_ . "\n" } @methods;
