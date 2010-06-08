@@ -5,7 +5,7 @@ use MooseX::Declare;
 role Net::HTTP::Console::Role::Plugins {
 
     use Try::Tiny;
-    
+
     has dispatchers => (
         is         => 'rw',
         isa        => 'ArrayRef[Str]',
@@ -13,7 +13,7 @@ role Net::HTTP::Console::Role::Plugins {
         lazy       => 1,
         auto_deref => 1,
         default    => sub {
-            [qw/Load HTTP Help Method Set/],
+            [qw/Load HTTP Help Method Set View/],
         }
     );
 

@@ -4,6 +4,8 @@ use MooseX::Declare;
 
 role Net::HTTP::Console::Role::API {
 
+    use Try::Tiny;
+
     has api_lib => (
         isa     => 'Str',
         is      => 'rw',
@@ -21,21 +23,29 @@ role Net::HTTP::Console::Role::API {
     );
 
     method load_api_lib($lib) {
-        Class::MOP::load_class($lib);
-        $self->api_lib($lib);
-        my $o = $lib->new();
-        $o->api_base_url($self->url)            if $self->has_url;
-        $o->api_format($self->format)           if $self->has_format;
-        $o->api_format_mode($self->format_mode) if $self->has_format_mode;
-        $o;
+        try {
+            Class::MOP::load_class($lib);
+            $self->api_lib($lib);
+            my $o = $lib->new();
+            $o->api_base_url($self->url)            if $self->has_url;
+            $o->api_format($self->format)           if $self->has_format;
+            $o->api_format_mode($self->format_mode) if $self->has_format_mode;
+            $o;
+        }catch{
+            # XXX ERROR
+        }
     }
 
     method new_anonymous_method ($http_method, $path) {
-        $self->api_object->meta->add_net_api_method(
-            'anonymous',
-            method => $http_method,
-            path   => $path,
-        );
+        try {
+            $self->api_object->meta->add_net_api_method(
+                'anonymous',
+                method => $http_method,
+                path   => $path,
+            );
+        }catch {
+            # XXX ERROR
+        }
     }
 }
 
