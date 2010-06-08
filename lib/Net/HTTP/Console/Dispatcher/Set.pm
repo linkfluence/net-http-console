@@ -13,10 +13,6 @@ class Net::HTTP::Console::Dispatcher::Set with Net::HTTP::Console::Dispatcher {
         }elsif($command eq 'unset') {
             $self->_unset_header($key) if $type eq 'header';
         }
-
-        # elsif ($command eq 'show_defined_headers') {
-        #     $self->_show_defined_headers();
-        # }
     }
 
     method pattern($input) {
@@ -25,19 +21,13 @@ class Net::HTTP::Console::Dispatcher::Set with Net::HTTP::Console::Dispatcher {
 
     method _set_header($header, $value) {
         $self->application->set_header($header, $value);
-        print "header $header set to $value\n";
+        $self->application->print("header $header set to $value");
     }
 
     method _unset_header($header) {
         $self->application->delete_header($header);
-        print "header $header unset\n";
+        $self->application->print("header $header unset");
     }
-
-    # method _show_defined_headers {
-    #     foreach ($self->application->all_headers) {
-    #         print $_->[0].": ".$_->[1]."\n";
-    #     }
-    # }
 }
 
 1;

@@ -9,6 +9,7 @@ class Net::HTTP::Console {
     with 'Net::HTTP::Console::Role::Headers';
     with 'Net::HTTP::Console::Role::Prompt';
     with 'Net::HTTP::Console::Role::Plugins';
+    with 'Net::HTTP::Console::Role::Message';
     with 'Net::HTTP::Console::Role::API';
     with 'Net::HTTP::Console::Role::HTTP::Response';
 

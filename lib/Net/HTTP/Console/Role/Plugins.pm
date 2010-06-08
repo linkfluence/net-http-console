@@ -43,7 +43,7 @@ role Net::HTTP::Console::Role::Plugins {
                 last if ($result = $_->dispatch($input));
             }
         }catch{
-            print "[ERROR]: ".$_;
+            $self->application->logger('error', $_);
         };
     }
 }

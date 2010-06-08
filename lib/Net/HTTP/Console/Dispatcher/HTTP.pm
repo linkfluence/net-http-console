@@ -21,7 +21,7 @@ class Net::HTTP::Console::Dispatcher::HTTP with Net::HTTP::Console::Dispatcher {
             $self->_do_request_with_body($method, $path, $body);
         }
         else {
-            # XXX unsupporter method
+            $self->application->logger('error', 'unsupported HTTP method');
         }
         return 1;
     }
@@ -32,7 +32,7 @@ class Net::HTTP::Console::Dispatcher::HTTP with Net::HTTP::Console::Dispatcher {
             my ($content, $result) = $self->application->api_object->anonymous;
             $self->application->_set_and_show($content, $result);
         }catch{
-            # XXX error
+            $self->application->error('error', $_);
         };
     }
 
@@ -58,9 +58,7 @@ class Net::HTTP::Console::Dispatcher::HTTP with Net::HTTP::Console::Dispatcher {
             my ($content, $result) = $self->application->api_object->anonymous;
             $self->application->_set_and_show($content, $result);
         }catch{
-            warn $_;
-            use YAML::Syck;
-            warn Dump $_->http_error;
+            $self->application->error('error', $_);
         };
     }
 }
