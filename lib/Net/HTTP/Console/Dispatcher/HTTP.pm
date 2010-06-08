@@ -7,7 +7,7 @@ class Net::HTTP::Console::Dispatcher::HTTP with Net::HTTP::Console::Dispatcher {
     use Try::Tiny;
 
     method pattern($input) {
-        $input =~ /^(?:GET|POST|PUT|DELETE|HEAD|show)\s/ ? return $input : return 0;
+        $input =~ /^(?:GET|POST|PUT|DELETE|HEAD)\s/ ? return $input : return 0;
     }
 
     method dispatch($input) {
@@ -19,10 +19,6 @@ class Net::HTTP::Console::Dispatcher::HTTP with Net::HTTP::Console::Dispatcher {
         }
         elsif (($method, $path, $body) = $input =~ /^(POST|PUT)\s(.*)(?:\s(.*))$/) {
             $self->_do_request_with_body($method, $path, $body);
-        }
-        elsif ($input =~ /^show\s(headers|content)$/) {
-            my $method = "_show_last_$1";
-            $self->application->$method;
         }
         else {
             # XXX unsupporter method
@@ -36,7 +32,7 @@ class Net::HTTP::Console::Dispatcher::HTTP with Net::HTTP::Console::Dispatcher {
             my ($content, $result) = $self->application->api_object->anonymous;
             $self->application->_set_and_show($content, $result);
         }catch{
-            warn $_;
+            # XXX error
         };
     }
 
