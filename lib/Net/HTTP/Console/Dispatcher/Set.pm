@@ -21,12 +21,12 @@ class Net::HTTP::Console::Dispatcher::Set with Net::HTTP::Console::Dispatcher {
 
     method _set_header($header, $value) {
         $self->application->set_header($header, $value);
-        $self->application->print("header $header set to $value");
+        $self->application->message("header $header set to $value");
     }
 
     method _unset_header($header) {
         $self->application->delete_header($header);
-        $self->application->print("header $header unset");
+        $self->application->message("header $header unset");
     }
 }
 

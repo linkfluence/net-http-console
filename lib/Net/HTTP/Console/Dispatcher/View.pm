@@ -19,7 +19,7 @@ class Net::HTTP::Console::Dispatcher::View with Net::HTTP::Console::Dispatcher {
         }
         elsif ($key eq 'defined_headers') {
             foreach ($self->application->all_headers) {
-                $self->application->print( $_->[0] . ': ' . $_->[1]);
+                $self->application->message( $_->[0] . ': ' . $_->[1]);
             }
         }
     }

@@ -9,7 +9,7 @@ role Net::HTTP::Console::Role::Message {
         print "[".uc($level)."] ".$message."\n";
     }
 
-    method print($message) {
+    method message($message) {
         print $message."\n";
     }
 

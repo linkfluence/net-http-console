@@ -24,12 +24,12 @@ role Net::HTTP::Console::Role::HTTP::Response {
     );
 
     method _show_last_content {
-        $self->print($self->_last_http_content);
+        $self->message($self->_last_http_content);
     }
 
     method _show_last_headers {
         foreach my $k (keys %{$self->_last_http_response->headers}) {
-            $self->print("$k: ".$self->_last_http_response->header($k));
+            $self->message("$k: ".$self->_last_http_response->header($k));
         }
     }
 
