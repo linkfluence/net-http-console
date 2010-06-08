@@ -1,70 +1,40 @@
-package Net::HTTP::Console;
+package Net::HTTP::Console; # For PAUSE
+our $VERSION = 0.01;
 
-use Moose;
-use Try::Tiny;
-use Method::Signatures::Simple;
-use namespace::autoclean;
+use MooseX::Declare;
 
-with qw/
-  MooseX::Getopt
-  Net::HTTP::Console::Role::APILib
-  Net::HTTP::Console::Role::HTTP
-  Net::HTTP::Console::Role::Headers
-  /;
+class Net::HTTP::Console {
+    use Try::Tiny;
 
-has url         => (isa => 'Str', is => 'rw', predicate => 'has_url');
-has format      => (isa => 'Str', is => 'rw', predicate => 'has_format');
-has format_mode => (isa => 'Str', is => 'rw', predicate => 'has_format_mode');
-has prompt => (
-    isa     => 'Str',
-    is      => 'rw',
-    lazy    => 1,
-    default => sub {
-        my $self = shift;
-        my $url = $self->api_object->api_base_url;
-        return ($url || '[no url defined!]') . '> ';
+    with 'MooseX::Getopt';
+    with 'Net::HTTP::Console::Role::Headers';
+    with 'Net::HTTP::Console::Role::Prompt';
+    with 'Net::HTTP::Console::Role::Plugins';
+    with 'Net::HTTP::Console::Role::API';
+    with 'Net::HTTP::Console::Role::HTTP::Response';
+
+    has url         => (isa => 'Str', is => 'rw', predicate => 'has_url');
+    has format      => (isa => 'Str', is => 'rw', predicate => 'has_format');
+    has format_mode => (isa => 'Str', is => 'rw', predicate => 'has_format_mode');
+
+    method dispatch ($input)  {
+        my $result;
+        try {
+            foreach ($self->all_plugins) {
+                last if ($result = $_->dispatch($input));
+            }
+        }catch{
+            print "[ERROR]: ".$_;
+        };
     }
-);
-has plugins => (
-    traits  => ['Array'],
-    is      => 'rw',
-    isa     => 'ArrayRef[Object]',
-    lazy    => 1,
-    handles => {all_plugins => 'elements', add_plugin => 'push'},
-    default => sub {
-        my $self = shift;
-        my @p;
-        for (qw/LoadLib HTTPRequest Help ExecuteMethod Headers/) {
-            my $p = "Net::HTTP::Console::Dispatcher::" . $_;
-            Class::MOP::load_class($p);
-            my $o = $p->new(application => $self);
-            push @p, $o;
-        }
-        \@p;
-    },
-);
 
-method dispatch($input) {
-    my $result;
-    try {
-        foreach ($self->all_plugins) {
-            $result = $_->dispatch($input);
-            last if $result;
-        }
+    method new_anonymous_method ($http_method, $path) {
+        $self->api_object->meta->add_net_api_method(
+            'anonymous',
+            method => $http_method,
+            path   => $path,
+        );
     }
-    catch {
-        print "[ERROR] : " . $_;
-    };
 }
-
-method new_anonymous_method($http_method, $path) {
-    $self->api_object->meta->add_net_api_method(
-        'anonymous',
-        method => $http_method,
-        path   => $path,
-    );
-}
-
-no Moose;
 
 1;

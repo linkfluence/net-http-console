@@ -1,21 +1,22 @@
 package Net::HTTP::Console::Dispatcher;
 
-use Moose::Role;
+use MooseX::Declare;
 
-has application => (is => 'rw', isa => 'Net::HTTP::Console');
+role Net::HTTP::Console::Dispatcher {
 
-requires qw/dispatch pattern/;
+    has application => (is => 'rw', isa => 'Net::HTTP::Console');
 
-around dispatch => sub {
-    my $orig = shift;
-    my $self = shift;
-    my $in   = shift;
+    requires qw/dispatch pattern/;
 
-    if (my $r = $self->pattern($in)) {
-        return $self->$orig($r);
-    }else{
-        return undef;
-    }
-};
+    around dispatch ($input) {
+        if (my $r = $self->pattern($input)) {
+            return $self->$orig($r);
+        }
+        else {
+            return undef;
+        }
+    };
+
+}
 
 1;

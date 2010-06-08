@@ -1,66 +1,61 @@
 package Net::HTTP::Console::Dispatcher::Help;
 
-use Moose;
-with qw/Net::HTTP::Console::Dispatcher/;
+use MooseX::Declare;
 
-sub dispatch {
-    my ($self, $input) = @_;
+class Net::HTTP::Console::Dispatcher::Help with Net::HTTP::Console::Dispatcher {
 
-    (my $cmd, my $cmd_name) = $input =~ /^help\s(\w+)?\s?(\w+)?/;
+    method dispatch($input) {
+        (my $cmd, my $cmd_name) = $input =~ /^help\s(\w+)?\s?(\w+)?/;
 
-    if ($cmd) {
-        if ($cmd eq 'command' && $cmd_name) {
-            $self->_get_help_for_command($cmd_name);
+        if ($cmd) {
+            if ($cmd eq 'command' && $cmd_name) {
+                $self->_get_help_for_command($cmd_name);
+            }
+            elsif ($cmd eq 'command') {
+                $self->_list_commands();
+            }
         }
-        elsif ($cmd eq 'command') {
-            $self->_list_commands();
+        else {
+            $self->_display_help();
         }
+        1;
     }
-    else {
-        $self->_display_help();
+
+    method pattern($input) {
+        $input =~ /^help/ ? return $input : return 0;
     }
-    1;
-}
 
-sub pattern {
-    my ($self, $input) = @_;
-    $input =~ /^help/ ? return $input : return 0;
-}
-
-sub _display_help {
-    print <<EOF
+    method _display_help {
+        print <<EOF
 help command    -  help about a command
 help request    -  help on how to write request
 EOF
-}
-
-sub _list_commands {
-    my $self = shift;
-    my @methods =
-      $self->application->api_object->meta->get_all_net_api_methods();
-
-    if (!@methods) {
-        print "no method available\n";
-        return;
     }
 
-    print "available commands:\n";
-    map { print "- " . $_ . "\n" } @methods;
-}
+      method _list_commands {
+          my @methods =
+            $self->application->api_object->meta->get_all_net_api_methods();
 
-sub _get_help_for_command {
-    my ($self, $cmd_name) = @_;
+          if (!@methods) {
+              print "no method available\n";
+              return;
+          }
 
-    my $method =
-      $self->application->api_object->meta->find_net_api_method_by_name(
-        $cmd_name);
+          print "available commands:\n";
+          map { print "- " . $_ . "\n" } @methods;
+      }
 
-    if (!$method) {
-        print "unknown method " . $cmd_name . "\n";
-        return;
-    }
+      method _get_help_for_command($cmd_name) {
+          my $method =
+            $self->application->api_object->meta->find_net_api_method_by_name($cmd_name);
 
-    print $method->documentation;
+          if (!$method) {
+              print "unknown method " . $cmd_name . "\n";
+              return;
+          }
+
+          print $method->documentation;
+      }
 }
 
 1;
